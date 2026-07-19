@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dawa Mashinani USSD Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+        
+        .ussd-text {
+            font-family: 'VT323', monospace;
+            white-space: pre-wrap;
+        }
+        
+        /* Custom scrollbar for the USSD screen */
+        .ussd-screen::-webkit-scrollbar {
+            width: 4px;
+        }
+        .ussd-screen::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
+
+    <!-- Presentation Dashboard Wrapper -->
+    <div class="max-w-4xl w-full bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
+        
+        <!-- Context / Information Panel -->
+        <div class="bg-emerald-900 text-white p-8 md:w-1/2 flex flex-col justify-center">
+            <h1 class="text-4xl font-bold mb-4">Dawa Mashinani</h1>
+            <p class="text-emerald-200 mb-6 text-lg">Offline-First Triage Prototype</p>
+            <div class="space-y-4 text-sm text-emerald-100">
+                <p><strong>Screen 1:</strong> Patient Identification</p>
+                <p><strong>Screen 2:</strong> Severity Triage (Pivot)</p>
+                <p><strong>Screen 3:</strong> Geo-Routing (Branch A, B, C)</p>
+                <p><strong>Screen 4:</strong> SMS Handoff Closure</p>
+            </div>
+            <div class="mt-8 pt-6 border-t border-emerald-700/50">
+                <p class="text-xs text-emerald-300">Live Simulator Engine v2.0</p>
+            </div>
+        </div>
+
+        <!-- Simulator Interface -->
+        <div class="bg-gray-50 p-8 md:w-1/2 flex items-center justify-center">
+            
+            <!-- Mobile Device Bezel -->
+            <div class="relative w-72 h-[550px] bg-white border-[12px] border-gray-900 rounded-[2.5rem] shadow-xl flex flex-col overflow-hidden">
+                
+                <!-- Speaker Notch -->
+                <div class="absolute top-0 inset-x-0 h-4 flex justify-center">
+                    <div class="w-16 h-3 bg-gray-900 rounded-b-xl"></div>
+                </div>
+
+                <!-- USSD Screen Display -->
+                <div class="bg-gray-50 flex-1 mt-6 p-4 border-b border-gray-200 flex flex-col">
+                    <div id="ussd-display" class="ussd-text text-gray-800 text-lg flex-1 overflow-y-auto ussd-screen">
+                        <!-- Content injected by JS -->
+                    </div>
+                    
+                    <!-- Input Area -->
+                    <div class="mt-2 flex items-center text-blue-600 font-bold">
+                        <span class="mr-2">&gt;</span>
+                        <input type="text" id="ussd-input" autocomplete="off" class="bg-transparent outline-none w-full text-blue-600 font-bold" placeholder="Type or dial..." autofocus>
+                    </div>
+                </div>
+
+                <!-- Keypad -->
+                <div class="bg-white h-64 p-4 grid grid-cols-3 gap-2 text-center text-gray-800">
+                    <button class="keypad-btn text-xl font-medium text-blue-500 hover:bg-gray-100 rounded-full py-2 transition" data-val="1">1</button>
+                    <button class="keypad-btn text-xl font-medium text-blue-500 hover:bg-gray-100 rounded-full py-2 transition" data-val="2">2</button>
+                    <button class="keypad-btn text-xl font-medium text-blue-500 hover:bg-gray-100 rounded-full py-2 transition" data-val="3">3</button>
+                    <button class="keypad-btn text-xl font-medium text-blue-500 hover:bg-gray-100 rounded-full py-2 transition" data-val="4">4</button>
+                    <button class="keypad-btn text-xl font-medium text-blue-500 hover:bg-gray-100 rounded-full py-2 transition" data-val="5">5</button>
+                    <button class="keypad-btn text-xl font-medium text-blue-500 hover:bg-gray-100 rounded-full py-2 transition" data-val="6">6</button>
+                    <button class="keypad-btn text-xl font-medium text-blue-500 hover:bg-gray-100 rounded-full py-2 transition" data-val="7">7</button>
+                    <button class="keypad-btn text-xl font-medium text-blue-500 hover:bg-gray-100 rounded-full py-2 transition" data-val="8">8</button>
+                    <button class="keypad-btn text-xl font-medium text-blue-500 hover:bg-gray-100 rounded-full py-2 transition" data-val="9">9</button>
+                    <button class="keypad-btn text-xl font-medium text-gray-400 hover:bg-gray-100 rounded-full py-2 transition" data-val="*">*</button>
+                    <button class="keypad-btn text-xl font-medium text-blue-500 hover:bg-gray-100 rounded-full py-2 transition" data-val="0">0</button>
+                    <button class="keypad-btn text-xl font-medium text-gray-400 hover:bg-gray-100 rounded-full py-2 transition" data-val="#">#</button>
+                    
+                    <!-- Call / Send Button -->
+                    <div class="col-span-3 flex justify-center mt-2">
+                        <button id="send-btn" class="bg-green-500 hover:bg-green-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-md transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        const USSD_MENU = {
+            HOME: {
+                text: "Welcome to Dawa Mashinani. 100% Free.\nStop wasting money guessing at the chemist. Who is sick?\n1. Me\n2. My Child",
+                process: (input) => (input === "1" || input === "2" ? "TRIAGE" : "HOME")
+            },
+            TRIAGE: {
+                text: "How long have you felt sick?\n1. Just started today\n2. A few days (Not getting better)\n3. It's an emergency / Severe pain",
+                process: (input) => {
+                    if (input === "1") return "BRANCH_A";
+                    if (input === "2") return "BRANCH_B";
+                    if (input === "3") return "BRANCH_C";
+                    return "TRIAGE";
+                }
+            },
+            BRANCH_A: {
+                text: "Since it just started, a verified chemist can help you save money today. Reply with your Ward/Area (e.g., KIBERA) to find trusted chemists near you.",
+                process: (input) => (input.trim() !== "" ? "CLOSURE_CHEMIST" : "BRANCH_A")
+            },
+            BRANCH_B: {
+                text: "Don't waste more money on painkillers. You need a clinic checkup. Reply with your Ward/Area (e.g., KIBERA) to get free SHA-approved clinics near you.",
+                process: (input) => (input.trim() !== "" ? "CLOSURE_CLINIC" : "BRANCH_B")
+            },
+            BRANCH_C: {
+                text: "This requires urgent attention. Do not go to a chemist. Reply with your Ward/Area immediately to get the nearest Level 4 Hospital.",
+                process: (input) => (input.trim() !== "" ? "CLOSURE_HOSPITAL" : "BRANCH_C")
+            },
+            CLOSURE_CHEMIST: { 
+                text: "Thank you. We have sent a free SMS with the 3 nearest Chemists to your phone. Get well soon.", 
+                isTerminal: true 
+            },
+            CLOSURE_CLINIC: { 
+                text: "Thank you. We have sent a free SMS with the 3 nearest Clinics to your phone. Get well soon.", 
+                isTerminal: true 
+            },
+            CLOSURE_HOSPITAL: { 
+                text: "Thank you. We have sent a free SMS with the 3 nearest Hospitals to your phone. Get well soon.", 
+                isTerminal: true 
+            }
+        };
+
+        // System State
+        let currentState = "HOME";
+        const displayEl = document.getElementById('ussd-display');
+        const inputEl = document.getElementById('ussd-input');
+        const sendBtn = document.getElementById('send-btn');
+        const keypadBtns = document.querySelectorAll('.keypad-btn');
+
+        // Render the current state to the screen
+        function renderScreen() {
+            displayEl.textContent = USSD_MENU[currentState].text;
+            inputEl.value = "";
+            inputEl.focus();
+
+            if (USSD_MENU[currentState].isTerminal) {
+                inputEl.disabled = true;
+                inputEl.placeholder = "Session Ended";
+                
+                // Optional: Auto-reset after a few seconds for continuous demos
+                setTimeout(() => {
+                    currentState = "HOME";
+                    inputEl.disabled = false;
+                    inputEl.placeholder = "Type or dial...";
+                    renderScreen();
+                }, 5000);
+            }
+        }
+
+        // Process the user's input and advance the state machine
+        function submitInput() {
+            if (USSD_MENU[currentState].isTerminal) return;
+            
+            const rawInput = inputEl.value;
+            const nextState = USSD_MENU[currentState].process(rawInput);
+            
+            if (nextState !== currentState) {
+                currentState = nextState;
+                renderScreen();
+            } else {
+                // Flash red to indicate invalid input silently
+                inputEl.classList.add('text-red-500');
+                setTimeout(() => inputEl.classList.remove('text-red-500'), 300);
+            }
+        }
+
+        // Event Listeners
+        sendBtn.addEventListener('click', submitInput);
+        
+        inputEl.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                submitInput();
+            }
+        });
+
+        keypadBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (!USSD_MENU[currentState].isTerminal) {
+                    inputEl.value += e.target.getAttribute('data-val');
+                    inputEl.focus();
+                }
+            });
+        });
+
+        // Initialize the first screen
+        renderScreen();
+    </script>
+</body>
+</html>
